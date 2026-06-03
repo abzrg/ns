@@ -1,0 +1,12 @@
+.cache/
+compile_commands.json
+compile_flags.txt
+
+a.out
+main
+*.a
+*.o
+*.so
+*.lib
+*.dylib
+build/
