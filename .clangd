@@ -1,7 +1,20 @@
+
+If:
+  PathMatch: [.*\.h, .*\.hpp, .*\.cpp]
 CompileFlags:
   Add: [
-      -std=c++23, -Wpedantic, -Wall, -Wextra, -Wno-empty-translation-unit,
+    -std=c++23,
+    # Note: For relative path to be recognized by clangd, an empty compile_flags.txt file must be
+    # created at the root of the project, just near to this .clangd file.
+    -Isrc,
+    -Wpedantic,
+    -Wall,
+    -Wextra,
+    -Wno-empty-translation-unit
   ]
+
+# CompileFlags:
+#   CompilationDatabase: build/debug
 
 Diagnostics:
   UnusedIncludes: None
