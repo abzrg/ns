@@ -8,8 +8,8 @@ project(
   DESCRIPTION  "NS (Numerical Solvers) - linear and nonlinear solvers (C++23)"
 )
 
-# CMake debug settings
-include(cmake/debug.cmake)
+# Export compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Build generator settings
 include(cmake/build_generator.cmake)

@@ -1,42 +1,44 @@
 BUILD_DIR            := build
-BUILD_TESTING        := Off
-GENERATOR            := Ninja  # 'Unix Make'
+PRESET               ?= debug
 CMAKE_INSTALL_PREFIX ?= /usr/local
 
 
-all: generate
+# --- Default
+
+all: build
 
 
-generate: $(BUILD_DIR)
-	cmake --build $(BUILD_DIR) --parallel
+# --- Workflow shortcuts (configure + build + test in one shot)
+
+debug:
+	cmake --workflow --preset debug
+
+release:
+	cmake --workflow --preset release
 
 
-$(BUILD_DIR): configure
-
+# --- Individual steps (use PRESET=debug|release make <target>)
 
 configure:
-	cmake -G $(GENERATOR) \
-	      -B $(BUILD_DIR) \
-	      -S . \
-	      -DBUILD_TESTING=$(BUILD_TESTING) \
-	      -DCMAKE_INSTALL_PREFIX=$(CMAKE_INSTALL_PREFIX)
+	cmake --preset $(PRESET)
+
+build: configure
+	cmake --build --preset $(PRESET) --parallel
+
+test tests:
+	ctest --preset $(PRESET)
+
+install: build
+	cmake --install $(BUILD_DIR)/$(PRESET) --prefix $(CMAKE_INSTALL_PREFIX)
 
 
-test: tests
-tests:
-	ctest --test-dir $(BUILD_DIR)
-
-
-install: all
-	cmake --install $(BUILD_DIR)
-
+# --- Housekeeping
 
 clean:
-	cmake --build $(BUILD_DIR) --target $@
-
+	cmake --build --preset $(PRESET) --target clean
 
 cleanall:
 	$(RM) -rv ./$(BUILD_DIR)
 
 
-.PHONY: all generate configure pbuild parallel-build test tests install  clean cleanall
+.PHONY: all debug release configure build test tests install clean cleanall
