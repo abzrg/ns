@@ -1,3 +1,3 @@
 #pragma once
 
-#include "ns/solvers/cg.hpp"
+#include <ns/solvers/cg.hpp>

@@ -1,4 +1,4 @@
 #pragma once
 
-#include "ns/linalg/vec.hpp"
-#include "ns/linalg/mat.hpp"
+#include <ns/linalg/vec.hpp>
+#include <ns/linalg/mat.hpp>

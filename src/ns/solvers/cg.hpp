@@ -1,3 +1,3 @@
 #pragma once
 
-#include "ns/linalg.hpp"
+#include <ns/linalg.hpp>
