@@ -18,7 +18,7 @@ include(cmake/build_generator.cmake)
 add_subdirectory(src)
 
 # Testing enabled by setting BUILD_TESTING=ON
-include(cmake/test.cmake)
+include(cmake/testing.cmake)
 
 # Install configurations and findpackage settings
 # Usage:
