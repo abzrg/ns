@@ -25,7 +25,7 @@ configure:
 build: configure
 	cmake --build --preset $(PRESET) --parallel
 
-test tests:
+test tests: build
 	ctest --preset $(PRESET)
 
 install: build
