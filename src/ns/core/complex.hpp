@@ -11,14 +11,14 @@ namespace ns
 // Conjugation of scalars. Handles non-complex numbers by returning them without
 // change.
 template<LinearAlgebraScalar U>
-static constexpr U conjugate(const U& x)
+constexpr U conjugate(const U& x)
 {
     return x;
 }
 
 // And, actually returns the conjugate of complex numbers if the input is one.
 template<LinearAlgebraScalar U>
-static constexpr std::complex<U> conjugate(const std::complex<U>& x)
+constexpr std::complex<U> conjugate(const std::complex<U>& x)
 {
     return std::conj(x);
 }
