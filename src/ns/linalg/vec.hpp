@@ -15,8 +15,8 @@
 namespace ns
 {
 
-template<LinearAlgebraScalar S>
-class Vec : public VecExpr<Vec<S>>
+template<LinearAlgebraScalar Scalar>
+class Vec : public VecExpr<Vec<Scalar>>
 {
 public:
     Vec() = default;
@@ -26,20 +26,20 @@ public:
         elems_(sz)
     {}
 
-    explicit Vec(size_t sz, S initval)
+    explicit Vec(size_t sz, Scalar initval)
     :
         elems_(sz, initval)
     {}
 
     // NOTE: initializer lists are usually passed by value because they are
     // basically lightweight proxy objects.
-    Vec(std::initializer_list<S> initlist)
+    Vec(std::initializer_list<Scalar> initlist)
     :
         elems_{ initlist }
     {}
 
     // Element-wise (Hadamard) product
-    Vec<S> hadamard(const Vec& other) const
+    Vec<Scalar> hadamard(const Vec& other) const
     {
         assert(size() == other.size());
 
@@ -70,11 +70,11 @@ public:
     //
     //     ⟨x,y⟩ = Σ_i \bar{x}_i y_i
     //
-    S inner(const Vec<S>& other) const
+    Scalar inner(const Vec<Scalar>& other) const
     {
         assert(size() == other.size());
 
-        S result{};
+        Scalar result{};
 
         for (size_t i = 0, sz = size(); i < sz; ++i)
         {
@@ -88,7 +88,7 @@ public:
         return result;
     }
 
-    inline S operator*(const Vec& other) const
+    inline Scalar operator*(const Vec& other) const
     {
         return inner(other);
     }
@@ -99,11 +99,11 @@ public:
     //
     //     ⟨x,y⟩ = Σ_i x_i y_i
     //
-    S dot(const Vec& other) const
+    Scalar dot(const Vec& other) const
     {
         assert(size() == other.size());
 
-        S result{};
+        Scalar result{};
 
         for (size_t i = 0, sz = size(); i < sz; ++i)
         {
@@ -140,7 +140,7 @@ public:
     }
 
     // Scalar multiplication
-    Vec operator*(const S& alpha) const
+    Vec operator*(const Scalar& alpha) const
     {
         Vec result(size());
 
@@ -155,7 +155,7 @@ public:
     // Does not make sense
     auto operator*=(const Vec&) = delete;
 
-    Vec& operator*=(const S& alpha)
+    Vec& operator*=(const Scalar& alpha)
     {
         for (size_t i = 0; i < size(); ++i)
         {
@@ -169,13 +169,13 @@ public:
     auto operator/(const Vec&) const = delete;
 
     // Scalar division
-    Vec operator/(const S& alpha) const
+    Vec operator/(const Scalar& alpha) const
     {
-        auto inv = S{ 1 } / alpha;
+        auto inv = Scalar{ 1 } / alpha;
         return *this * inv;
     }
 
-    Vec& operator/=(const S& alpha)
+    Vec& operator/=(const Scalar& alpha)
     {
         for (size_t i = 0; i < size(); ++i)
         {
@@ -199,29 +199,29 @@ public:
         return sqrt(abs(inner(*this, *this)));
     }
 
-    inline const S& at(size_t index) const
+    inline const Scalar& at(size_t index) const
     {
         checkindex(index);
         return elems_.at(index);
     }
 
-    inline S& at(size_t index)
+    inline Scalar& at(size_t index)
     {
         checkindex(index);
         return elems_.at(index);
     }
 
-    inline S& operator[](size_t index)
+    inline Scalar& operator[](size_t index)
     {
         return elems_[index];
     }
 
-    inline const S& operator[](size_t index) const
+    inline const Scalar& operator[](size_t index) const
     {
         return elems_[index];
     }
 
-    inline const std::vector<S>& elems() const noexcept
+    inline const std::vector<Scalar>& elems() const noexcept
     {
         return elems_;
     }
@@ -242,15 +242,15 @@ public:
     }
 
 private:
-    std::vector<S> elems_{};
+    std::vector<Scalar> elems_{};
 };
 
 
 
 // Constructor taking vector expressions
-template<LinearAlgebraScalar S>
+template<LinearAlgebraScalar Scalar>
 template<typename Expr>
-Vec<S>::Vec(const VecExpr<Expr>& expr)
+Vec<Scalar>::Vec(const VecExpr<Expr>& expr)
 {
     const Expr& e = expr.self();
 
@@ -263,9 +263,9 @@ Vec<S>::Vec(const VecExpr<Expr>& expr)
 
 
 // Copy assignment operator taking vector expression
-template<LinearAlgebraScalar S>
+template<LinearAlgebraScalar Scalar>
 template<typename Expr>
-Vec<S>::Vec& Vec<S>::operator=(const VecExpr<Expr>& expr)
+Vec<Scalar>::Vec& Vec<Scalar>::operator=(const VecExpr<Expr>& expr)
 {
     const Expr& e = expr.self();
 
@@ -280,8 +280,14 @@ Vec<S>::Vec& Vec<S>::operator=(const VecExpr<Expr>& expr)
 
 
 // Equality check for floating point scalars
-template<FloatingLinearAlgebraScalar FS>
-bool approx_equal(const Vec<FS>& vec, const Vec<FS>& other, f64 rel_tol = 1e-9, f64 abs_tol = 1e-12)
+template<FloatingLinearAlgebraScalar FloatScalar>
+bool approx_equal
+(
+    const Vec<FloatScalar>& vec,
+    const Vec<FloatScalar>& other,
+    f64 rel_tol = 1e-9,
+    f64 abs_tol = 1e-12
+)
 {
     assert(vec.size() == other.size());
 
@@ -298,10 +304,10 @@ bool approx_equal(const Vec<FS>& vec, const Vec<FS>& other, f64 rel_tol = 1e-9, 
 
 
 // Equality operator that works both for integers and floats
-template<LinearAlgebraScalar S>
-bool Vec<S>::operator==(const Vec& vec) const
+template<LinearAlgebraScalar Scalar>
+bool Vec<Scalar>::operator==(const Vec& vec) const
 {
-    if constexpr (std::integral<S>)
+    if constexpr (std::integral<Scalar>)
     {
         // Exact comparison for integers
         return elems_ == vec.elems_;
@@ -314,20 +320,20 @@ bool Vec<S>::operator==(const Vec& vec) const
 
 
 // Hermitian inner product
-template<LinearAlgebraScalar S>
-S inner(const Vec<S>& vec, const Vec<S>& other)
+template<LinearAlgebraScalar Scalar>
+Scalar inner(const Vec<Scalar>& vec, const Vec<Scalar>& other)
 {
     return vec.inner(other);
 }
 
 
 // Algebraic dot product (different from Hermitian inner product)
-template<LinearAlgebraScalar S>
-S dot(const Vec<S>& vec, const Vec<S>& other)
+template<LinearAlgebraScalar Scalar>
+Scalar dot(const Vec<Scalar>& vec, const Vec<Scalar>& other)
 {
     assert(vec.size() == other.size());
 
-    S result{};
+    Scalar result{};
 
     for (size_t i = 0, sz = vec.size(); i < sz; ++i)
     {
@@ -339,40 +345,40 @@ S dot(const Vec<S>& vec, const Vec<S>& other)
 
 
 // L-2 norm
-template<LinearAlgebraScalar S>
-auto norm(const Vec<S>& vec)
+template<LinearAlgebraScalar Scalar>
+auto norm(const Vec<Scalar>& vec)
 {
     return vec.norm();
 }
 
 
 // Component-wise multiplication
-template<LinearAlgebraScalar S>
-Vec<S> hadamard(const Vec<S>& vec, const Vec<S>& other)
+template<LinearAlgebraScalar Scalar>
+Vec<Scalar> hadamard(const Vec<Scalar>& vec, const Vec<Scalar>& other)
 {
     return vec.hadamard(other);
 }
 
 
 // Scalar-vector multiplication
-template<LinearAlgebraScalar S>
-Vec<S> operator*(const S& alpha, const Vec<S>& vec)
+template<LinearAlgebraScalar Scalar>
+Vec<Scalar> operator*(const Scalar& alpha, const Vec<Scalar>& vec)
 {
     return vec * alpha;
 }
 
 
 // Addition of vector expressions
-template<typename LHS, typename RHS>
-auto operator+(const VecExpr<LHS>& lhs, const VecExpr<RHS>& rhs)
+template<typename LeftExpr, typename RightExpr>
+auto operator+(const VecExpr<LeftExpr>& left_expr, const VecExpr<RightExpr>& right_expr)
 {
-    return AddExpr<LHS, RHS>(lhs.self(), rhs.self());
+    return AddExpr<LeftExpr, RightExpr>(left_expr.self(), right_expr.self());
 }
 
 
 // Left-shift operator for printing a vector
-template<LinearAlgebraScalar S>
-std::ostream& operator<<(std::ostream& os, const Vec<S>& vec)
+template<LinearAlgebraScalar Scalar>
+std::ostream& operator<<(std::ostream& os, const Vec<Scalar>& vec)
 {
     os << "[";
 
@@ -398,8 +404,8 @@ std::ostream& operator<<(std::ostream& os, const Vec<S>& vec)
 
 
 // Partial specialization of formatter for Vec
-template<ns::LinearAlgebraScalar S>
-struct std::formatter<ns::Vec<S>>
+template<ns::LinearAlgebraScalar Scalar>
+struct std::formatter<ns::Vec<Scalar>>
 {
     // No custom format spec parsing for now
     constexpr auto parse(std::format_parse_context& ctx)
@@ -407,7 +413,7 @@ struct std::formatter<ns::Vec<S>>
         return ctx.begin();
     }
 
-    auto format(const ns::Vec<S>& vec, std::format_context& ctx) const
+    auto format(const ns::Vec<Scalar>& vec, std::format_context& ctx) const
     {
         std::ostringstream oss;
         oss << vec;

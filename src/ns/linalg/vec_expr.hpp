@@ -23,26 +23,26 @@ struct VecExpr
 };
 
 
-template<typename LHS, typename RHS>
-class AddExpr : public VecExpr<AddExpr<LHS, RHS>>
+template<typename LeftExpr, typename RightExpr>
+class AddExpr : public VecExpr<AddExpr<LeftExpr, RightExpr>>
 {
-    const LHS& lhs_;
-    const RHS& rhs_;
+    const LeftExpr& left_;
+    const RightExpr& right_;
 
 public:
-    AddExpr(const LHS& lhs, const RHS& rhs)
+    AddExpr(const LeftExpr& left, const RightExpr& right)
     :
-        lhs_(lhs),
-        rhs_(rhs)
+        left_(left),
+        right_(right)
     {}
 
     inline auto size() const
     {
-        return lhs_.size();
+        return left_.size();
     }
 
     inline auto operator[](size_t i) const
     {
-        return lhs_[i] + rhs_[i];
+        return left_[i] + right_[i];
     }
 };
