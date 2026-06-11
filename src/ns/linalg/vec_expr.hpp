@@ -31,10 +31,10 @@ class AddExpr : public VecExpr<AddExpr<LHS, RHS>>
 
 public:
     AddExpr(const LHS& lhs, const RHS& rhs)
-    : lhs_(lhs)
-    , rhs_(rhs)
-    {
-    }
+    :
+        lhs_(lhs),
+        rhs_(rhs)
+    {}
 
     inline auto size() const
     {

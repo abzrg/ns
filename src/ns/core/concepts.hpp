@@ -30,19 +30,24 @@ concept LinearAlgebraScalar = requires(T a, T b) {
 // Floating point scalar
 
 template<typename T>
-struct is_complex : std::false_type
-{
-};
+struct is_complex
+:
+    std::false_type
+{};
 
 template<typename T>
-struct is_complex<std::complex<T>> : std::true_type
-{
-};
+struct is_complex<std::complex<T>>
+:
+    std::true_type
+{};
 
 template<typename T>
 concept FloatingLinearAlgebraScalar
-    = (std::floating_point<T>
-       || (is_complex<T>::value && std::floating_point<typename T::value_type>) )
-      && LinearAlgebraScalar<T>;
+    =
+    (
+        std::floating_point<T>
+        || (is_complex<T>::value && std::floating_point<typename T::value_type>)
+    )
+    && LinearAlgebraScalar<T>;
 
 }  // namespace ns

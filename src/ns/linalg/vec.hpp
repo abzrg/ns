@@ -22,21 +22,21 @@ public:
     Vec() = default;
 
     explicit Vec(size_t sz)
-    : elems_(sz)
-    {
-    }
+    :
+        elems_(sz)
+    {}
 
     explicit Vec(size_t sz, S initval)
-    : elems_(sz, initval)
-    {
-    }
+    :
+        elems_(sz, initval)
+    {}
 
     // NOTE: initializer lists are usually passed by value because they are
     // basically lightweight proxy objects.
     Vec(std::initializer_list<S> initlist)
-    : elems_{ initlist }
-    {
-    }
+    :
+        elems_{ initlist }
+    {}
 
     // Element-wise (Hadamard) product
     Vec<S> hadamard(const Vec& other) const
@@ -76,7 +76,7 @@ public:
 
         S result{};
 
-        for (size_t i = 0; i < size(); ++i)
+        for (size_t i = 0, sz = size(); i < sz; ++i)
         {
             // NOTE: std::conj() promotes real numbers into complex numbers.
             // That's why we use the free function template `conjugate`.
@@ -119,7 +119,7 @@ public:
 
         Vec result(size());
 
-        for (size_t i = 0; i < size(); ++i)
+        for (size_t i = 0, sz = size(); i < sz; ++i)
         {
             result.at(i) = at(i) - other.at(i);
         }
@@ -131,7 +131,7 @@ public:
     {
         assert(size() == other.size());
 
-        for (size_t i = 0; i < size(); ++i)
+        for (size_t i = 0, sz = size(); i < sz; ++i)
         {
             at(i) -= other.at(i);
         }
@@ -246,9 +246,40 @@ private:
 };
 
 
-// --- Free functions
+
+// Constructor taking vector expressions
+template<LinearAlgebraScalar S>
+template<typename Expr>
+Vec<S>::Vec(const VecExpr<Expr>& expr)
+{
+    const Expr& e = expr.self();
+
+    const auto sz = e.size();
+    elems_.resize(sz);
+
+    for (size_t i = 0; i < sz; ++i)
+        elems_[i] = e[i];
+}
 
 
+// Copy assignment operator taking vector expression
+template<LinearAlgebraScalar S>
+template<typename Expr>
+Vec<S>::Vec& Vec<S>::operator=(const VecExpr<Expr>& expr)
+{
+    const Expr& e = expr.self();
+
+    const auto sz = e.size();
+    elems_.resize(sz);
+
+    for (size_t i = 0; i < sz; ++i)
+        elems_[i] = e[i];
+
+    return *this;
+}
+
+
+// Equality check for floating point scalars
 template<FloatingLinearAlgebraScalar FS>
 bool approx_equal(const Vec<FS>& vec, const Vec<FS>& other, f64 rel_tol = 1e-9, f64 abs_tol = 1e-12)
 {
@@ -266,6 +297,31 @@ bool approx_equal(const Vec<FS>& vec, const Vec<FS>& other, f64 rel_tol = 1e-9, 
 }
 
 
+// Equality operator that works both for integers and floats
+template<LinearAlgebraScalar S>
+bool Vec<S>::operator==(const Vec& vec) const
+{
+    if constexpr (std::integral<S>)
+    {
+        // Exact comparison for integers
+        return elems_ == vec.elems_;
+    }
+    else
+    {
+        return approx_equal(*this, vec);
+    }
+}
+
+
+// Hermitian inner product
+template<LinearAlgebraScalar S>
+S inner(const Vec<S>& vec, const Vec<S>& other)
+{
+    return vec.inner(other);
+}
+
+
+// Algebraic dot product (different from Hermitian inner product)
 template<LinearAlgebraScalar S>
 S dot(const Vec<S>& vec, const Vec<S>& other)
 {
@@ -282,13 +338,7 @@ S dot(const Vec<S>& vec, const Vec<S>& other)
 }
 
 
-template<LinearAlgebraScalar S>
-S inner(const Vec<S>& vec, const Vec<S>& other)
-{
-    return vec.inner(other);
-}
-
-
+// L-2 norm
 template<LinearAlgebraScalar S>
 auto norm(const Vec<S>& vec)
 {
@@ -296,6 +346,7 @@ auto norm(const Vec<S>& vec)
 }
 
 
+// Component-wise multiplication
 template<LinearAlgebraScalar S>
 Vec<S> hadamard(const Vec<S>& vec, const Vec<S>& other)
 {
@@ -303,6 +354,7 @@ Vec<S> hadamard(const Vec<S>& vec, const Vec<S>& other)
 }
 
 
+// Scalar-vector multiplication
 template<LinearAlgebraScalar S>
 Vec<S> operator*(const S& alpha, const Vec<S>& vec)
 {
@@ -310,6 +362,15 @@ Vec<S> operator*(const S& alpha, const Vec<S>& vec)
 }
 
 
+// Addition of vector expressions
+template<typename LHS, typename RHS>
+auto operator+(const VecExpr<LHS>& lhs, const VecExpr<RHS>& rhs)
+{
+    return AddExpr<LHS, RHS>(lhs.self(), rhs.self());
+}
+
+
+// Left-shift operator for printing a vector
 template<LinearAlgebraScalar S>
 std::ostream& operator<<(std::ostream& os, const Vec<S>& vec)
 {
@@ -332,52 +393,8 @@ std::ostream& operator<<(std::ostream& os, const Vec<S>& vec)
 }
 
 
-template<typename LHS, typename RHS>
-auto operator+(const VecExpr<LHS>& lhs, const VecExpr<RHS>& rhs)
-{
-    return AddExpr<LHS, RHS>(lhs.self(), rhs.self());
-}
-
-
-template<LinearAlgebraScalar S>
-template<typename Expr>
-Vec<S>::Vec(const VecExpr<Expr>& expr)
-{
-    const Expr& e = expr.self();
-
-    elems_.resize(e.size());
-
-    for (size_t i = 0; i < e.size(); ++i)
-        elems_[i] = e[i];
-}
-
-
-template<LinearAlgebraScalar S>
-template<typename Expr>
-Vec<S>::Vec& Vec<S>::operator=(const VecExpr<Expr>& expr)
-{
-    const Expr& e = expr.self();
-
-    elems_.resize(e.size());
-
-    for (size_t i = 0; i < e.size(); ++i)
-        elems_[i] = e[i];
-
-    return *this;
-}
-
-
-template<LinearAlgebraScalar S>
-bool Vec<S>::operator==(const Vec& vec) const
-{
-    if constexpr (std::integral<S>)
-        // Exact comparison
-        return elems_ == vec.elems_;
-    else
-        return approx_equal(*this, vec);
-}
-
 }  // namespace ns
+
 
 
 // Partial specialization of formatter for Vec
