@@ -19,6 +19,30 @@ template<LinearAlgebraScalar Scalar>
 class Vec : public VecExpr<Vec<Scalar>>
 {
 public:
+    // Scalar type produced by this vector expression.
+    //
+    // Expression templates operate on both concrete vectors and expression
+    // nodes (AddExpr, SubExpr, ...). Generic code often needs to know the
+    // scalar type associated with an expression without knowing its exact
+    // concrete type.
+    //
+    // For a Vec<double>, value_type is double.
+    // For a Vec<std::complex<double>>, value_type is std::complex<double>.
+    //
+    // Expression nodes use this information to determine their own result
+    // type, e.g.:
+    //
+    //     AddExpr<Vec<float>, Vec<double>>
+    //
+    // computes
+    //
+    //     std::common_type_t<float, double>
+    //
+    // and therefore exposes
+    //
+    //     value_type = double.
+    using value_type = Scalar;
+
     Vec() = default;
 
     explicit Vec(size_t sz)
@@ -53,11 +77,41 @@ public:
         return result;
     }
 
-    // Construction from expressions
+    // Construct a concrete vector from a vector expression.
+    //
+    // Expression-template operators such as:
+    //
+    //     auto expr = a + b + c;
+    //
+    // do not immediately compute any values. Instead they build a lightweight
+    // expression tree describing the computation.
+    //
+    // This constructor performs the actual evaluation by iterating over the
+    // expression and materializing its values into storage.
+    //
+    // Example:
+    //
+    //     Vec<double> x{1,2,3};
+    //     Vec<double> y{4,5,6};
+    //
+    //     Vec<double> z = x + y;
+    //
+    // Here z is constructed from an AddExpr and the addition is evaluated
+    // exactly once during construction.
     template<typename Expr>
     Vec(const VecExpr<Expr>& expr);
 
-    // Copy assignment from expressions
+    // Assign from a vector expression.
+    //
+    // Similar to the expression constructor, this is the point where lazy
+    // expressions are evaluated and written into an existing vector.
+    //
+    // Example:
+    //
+    //     x = a + b + c;
+    //
+    // The expression tree is traversed once and the resulting values are
+    // stored directly into x.
     template<typename Expr>
     Vec& operator=(const VecExpr<Expr>& expr);
 
@@ -185,9 +239,6 @@ public:
         return *this;
     }
 
-    // For now set to be deleted, as the base class 'VecExpr<Vec<int>>' hasn't defined it.
-    // By default check equality for integers; specialize for the rest to use
-    // approx_equal
     inline bool operator==(const Vec&) const;
 
     // L-2 norm
@@ -252,13 +303,13 @@ template<LinearAlgebraScalar Scalar>
 template<typename Expr>
 Vec<Scalar>::Vec(const VecExpr<Expr>& expr)
 {
-    const Expr& e = expr.self();
+    const Expr& expr_derived = expr.self();
 
-    const auto sz = e.size();
+    const auto sz = expr_derived.size();
     elems_.resize(sz);
 
     for (size_t i = 0; i < sz; ++i)
-        elems_[i] = e[i];
+        elems_[i] = expr_derived[i];
 }
 
 
@@ -368,13 +419,36 @@ Vec<Scalar> operator*(const Scalar& alpha, const Vec<Scalar>& vec)
 }
 
 
-// Addition of vector expressions
-template<typename LeftExpr, typename RightExpr>
+// Addition of vector expressions.
+//
+// Unlike a traditional operator+, this function does not immediately allocate a result vector or
+// perform any additions.
+//
+// Instead it returns an AddExpr object representing the computation. Actual evaluation is deferred
+// until the expression is assigned to or used to construct a concrete Vec.
+//
+// Example:
+//
+//     auto expr = a + b;
+//
+// produces:
+//
+//     AddExpr<Vec, Vec>
+//
+// and
+//
+//     auto expr = a + b + c;
+//
+// produces:
+//
+//     AddExpr<AddExpr<Vec,Vec>, Vec>
+//
+// allowing the entire expression to be evaluated in a single pass.
+template<VectorExpression LeftExpr, VectorExpression RightExpr>
 auto operator+(const VecExpr<LeftExpr>& left_expr, const VecExpr<RightExpr>& right_expr)
 {
     return AddExpr<LeftExpr, RightExpr>(left_expr.self(), right_expr.self());
 }
-
 
 // Left-shift operator for printing a vector
 template<LinearAlgebraScalar Scalar>
