@@ -253,13 +253,11 @@ public:
 
     const Scalar& at(size_t index) const
     {
-        checkindex(index);
         return elems_.at(index);
     }
 
     Scalar& at(size_t index)
     {
-        checkindex(index);
         return elems_.at(index);
     }
 
