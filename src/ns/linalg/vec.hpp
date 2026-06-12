@@ -168,6 +168,13 @@ public:
         return result;
     }
 
+    template<VectorExpression Expr>
+    Vec& operator+=(const Expr& other)
+    {
+        *this = *this + other;
+        return *this;
+    }
+
     Vec operator-(const Vec& other) const
     {
         assert(size() == other.size());
