@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ns/core/concepts.hpp"
 #include "ns/core/constants.hpp"
 #include <cassert>
 #include <initializer_list>
@@ -247,8 +248,6 @@ public:
         return *this;
     }
 
-    inline bool operator==(const Vec& /*vec*/) const;
-
     // L-2 norm
     Scalar norm() const
     {
@@ -331,21 +330,30 @@ Vec<Scalar>::Vec& Vec<Scalar>::operator=(const VecExpr<Expr>& expr)
 
 
 // Equality check for floating point scalars
-template<FloatingLinearAlgebraScalar FloatScalar>
+template<VectorExpression LHSExpr, VectorExpression RHSExpr>
 bool approx_equal
 (
-    const Vec<FloatScalar>& vec,
-    const Vec<FloatScalar>& other,
-    f64 rel_tol = ns::relative_tolerance<FloatScalar>,
-    f64 abs_tol = ns::absolute_tolerance<FloatScalar>
+    const LHSExpr& lhs_expr,
+    const RHSExpr& rhs_expr,
+    ns::f64 rel_tol = ns::relative_tolerance,
+    ns::f64 abs_tol = ns::absolute_tolerance
 )
 {
-    assert(vec.size() == other.size());
-
-    for (size_t i = 0, sz = vec.size(); i < sz; ++i)
+    if (lhs_expr.size() != rhs_expr.size())
     {
-        auto diff  = std::abs(vec.at(i) - other.at(i));
-        auto scale = std::max(std::abs(vec.at(i)), std::abs(other.at(i)));
+        return false;
+    }
+
+    for (size_t i = 0; i < lhs_expr.size(); ++i)
+    {
+        const auto diff = std::abs(lhs_expr[i] - rhs_expr[i]);
+        const auto scale =
+            std::max
+            (
+                std::abs(lhs_expr[i]),
+                std::abs(rhs_expr[i])
+            );
+
         if (diff > abs_tol + (rel_tol * scale))
         {
             return false;
@@ -356,18 +364,39 @@ bool approx_equal
 }
 
 
-// Equality operator that works both for integers and floats
-template<LinearAlgebraScalar Scalar>
-bool Vec<Scalar>::operator==(const Vec& vec) const
+template<VectorExpression LHSExpr, VectorExpression RHSExpr>
+bool operator==(const VecExpr<LHSExpr>& lhs, const VecExpr<RHSExpr>& rhs)
 {
-    if constexpr (std::integral<Scalar>)
+    const auto& a = lhs.self();
+    const auto& b = rhs.self();
+
+    if (a.size() != b.size())
     {
-        // Exact comparison for integers
-        return elems_ == vec.elems_;
+        return false;
+    }
+
+    using value_type =
+        std::common_type_t
+        <
+            typename LHSExpr::value_type,
+            typename RHSExpr::value_type
+        >;
+
+    if constexpr (FloatingLinearAlgebraScalar<value_type>)
+    {
+        return approx_equal(a, b);
     }
     else
     {
-        return approx_equal(*this, vec);
+        for (size_t i = 0; i < a.size(); ++i)
+        {
+            if (a[i] != b[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
