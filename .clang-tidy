@@ -1,0 +1,36 @@
+# # Core correctness and design guidance.
+# cppcoreguidelines-*,
+#
+# # Modern language features and idioms.
+# modernize-*,
+#
+# # Common bug patterns.
+# bugprone-*,
+#
+# # Unnecessary copies and inefficient constructs.
+# performance-*,
+#
+# # Naming, interfaces, and general code quality.
+# readability-*,
+#
+# # Clang static analyzer checks.
+# clang-analyzer-*,
+#
+# # Disabled checks.
+# -modernize-use-trailing-return-type,
+# -readability-identifier-length
+
+---
+
+Checks: >
+  cppcoreguidelines-*,
+  modernize-*,
+  bugprone-*,
+  performance-*,
+  readability-*,
+  clang-analyzer-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length
+
+WarningsAsErrors: '1'
+FormatStyle: none

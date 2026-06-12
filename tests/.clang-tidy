@@ -1,0 +1,3 @@
+# Test code prioritizes readability and ease of writing over library-quality style requirements.
+# Restrict clang-tidy to compiler diagnostics only.
+Checks: "-*,clang-diagnostic-*"
