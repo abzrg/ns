@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ns/core/constants.hpp"
 #include <cassert>
 #include <initializer_list>
 #include <ostream>
@@ -142,7 +143,7 @@ public:
         return result;
     }
 
-    inline Scalar operator*(const Vec& other) const
+    Scalar operator*(const Vec& other) const
     {
         return inner(other);
     }
@@ -239,10 +240,10 @@ public:
         return *this;
     }
 
-    inline bool operator==(const Vec&) const;
+    inline bool operator==(const Vec& /*vec*/) const;
 
     // L-2 norm
-    inline auto norm() const
+    Scalar norm() const
     {
         using std::abs;
         using std::sqrt;
@@ -250,44 +251,44 @@ public:
         return sqrt(abs(inner(*this, *this)));
     }
 
-    inline const Scalar& at(size_t index) const
+    const Scalar& at(size_t index) const
     {
         checkindex(index);
         return elems_.at(index);
     }
 
-    inline Scalar& at(size_t index)
+    Scalar& at(size_t index)
     {
         checkindex(index);
         return elems_.at(index);
     }
 
-    inline Scalar& operator[](size_t index)
+    Scalar& operator[](size_t index)
     {
         return elems_[index];
     }
 
-    inline const Scalar& operator[](size_t index) const
+    const Scalar& operator[](size_t index) const
     {
         return elems_[index];
     }
 
-    inline const std::vector<Scalar>& elems() const noexcept
+    const std::vector<Scalar>& elems() const noexcept
     {
         return elems_;
     }
 
-    inline size_t size() const noexcept
+    [[nodiscard]] size_t size() const noexcept
     {
         return elems_.size();
     }
 
-    inline void resize(size_t new_size)
+    void resize(size_t new_size)
     {
         elems_.resize(new_size);
     }
 
-    inline void checkindex(size_t index) const noexcept
+    void checkindex(size_t index) const noexcept
     {
         assert(index < elems_.size());
     }
@@ -309,7 +310,9 @@ Vec<Scalar>::Vec(const VecExpr<Expr>& expr)
     elems_.resize(sz);
 
     for (size_t i = 0; i < sz; ++i)
+    {
         elems_[i] = expr_derived[i];
+    }
 }
 
 
@@ -324,7 +327,9 @@ Vec<Scalar>::Vec& Vec<Scalar>::operator=(const VecExpr<Expr>& expr)
     elems_.resize(sz);
 
     for (size_t i = 0; i < sz; ++i)
+    {
         elems_[i] = e[i];
+    }
 
     return *this;
 }
@@ -336,8 +341,8 @@ bool approx_equal
 (
     const Vec<FloatScalar>& vec,
     const Vec<FloatScalar>& other,
-    f64 rel_tol = 1e-9,
-    f64 abs_tol = 1e-12
+    f64 rel_tol = ns::relative_tolerance<FloatScalar>,
+    f64 abs_tol = ns::absolute_tolerance<FloatScalar>
 )
 {
     assert(vec.size() == other.size());
@@ -346,8 +351,10 @@ bool approx_equal
     {
         auto diff  = std::abs(vec.at(i) - other.at(i));
         auto scale = std::max(std::abs(vec.at(i)), std::abs(other.at(i)));
-        if (diff > abs_tol + rel_tol * scale)
+        if (diff > abs_tol + (rel_tol * scale))
+        {
             return false;
+        }
     }
 
     return true;
@@ -397,7 +404,7 @@ Scalar dot(const Vec<Scalar>& vec, const Vec<Scalar>& other)
 
 // L-2 norm
 template<LinearAlgebraScalar Scalar>
-auto norm(const Vec<Scalar>& vec)
+Scalar norm(const Vec<Scalar>& vec)
 {
     return vec.norm();
 }

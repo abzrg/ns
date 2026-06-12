@@ -197,7 +197,7 @@ struct VecExpr
     //     AddExpr expr(...);
     //
     // Inside VecExpr<AddExpr>, self() returns a reference to expr.
-    inline const Derived& self() const
+    const Derived& self() const
     {
         return static_cast<const Derived&>(*this);
     }
@@ -206,7 +206,7 @@ struct VecExpr
     //
     // This allows generic code to query the size of any vector expression
     // through the VecExpr interface.
-    inline auto size() const
+    auto size() const
     {
         return self().size();
     }
@@ -215,7 +215,7 @@ struct VecExpr
     //
     // Expression nodes compute values lazily. Calling expr[i] evaluates only
     // the i-th element of the expression.
-    inline auto operator[](size_t i) const
+    auto operator[](size_t i) const
     {
         return self()[i];
     }
@@ -285,12 +285,12 @@ public:
          assert(left_expr.size() == right_expr.size());
     }
 
-    inline auto size() const
+    auto size() const
     {
         return left_expr_.size();
     }
 
-    inline auto operator[](size_t i) const
+    auto operator[](size_t i) const
     {
         return left_expr_[i] + right_expr_[i];
     }
