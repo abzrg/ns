@@ -251,29 +251,19 @@ public:
         return sqrt(abs(inner(*this, *this)));
     }
 
-    const Scalar& at(size_t index) const
+    auto at(this auto& self, size_t index)
     {
-        return elems_.at(index);
+         return self.elems_[index];
     }
 
-    Scalar& at(size_t index)
+    decltype(auto) operator[](this auto& self, size_t index)
     {
-        return elems_.at(index);
+        return self.elems_[index];
     }
 
-    Scalar& operator[](size_t index)
+    auto elems(this auto& self) noexcept
     {
-        return elems_[index];
-    }
-
-    const Scalar& operator[](size_t index) const
-    {
-        return elems_[index];
-    }
-
-    const std::vector<Scalar>& elems() const noexcept
-    {
-        return elems_;
+        return self.elems_;
     }
 
     [[nodiscard]] size_t size() const noexcept
