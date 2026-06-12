@@ -3,8 +3,17 @@ if(BUILD_TESTING)
       "--output-on-failure" "--output-junit" "junit.xml")
   include(CTest)
 
-  # Catch2
+  # --- Fetch and build Catch2
+
   Include(FetchContent)
+
+  # By default FetchContent does a git fetch to verify the specified tag ref hasn't moved, everytime
+  # CMake reconfigures. The following skips that check entirely once it has been downloaded once.
+  set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+
+  # Be verbose when fetching contents
+  set(FETCHCONTENT_QUIET OFF)
+
   FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
