@@ -481,6 +481,30 @@ auto operator+(const VecExpr<LeftExpr>& left_expr, const VecExpr<RightExpr>& rig
     return AddExpr<LeftExpr, RightExpr>(left_expr.self(), right_expr.self());
 }
 
+template<VectorExpression LeftExpr, VectorExpression RightExpr>
+auto operator-(const VecExpr<LeftExpr>& left_expr, const VecExpr<RightExpr>& right_expr)
+{
+    return SubExpr<LeftExpr, RightExpr>(left_expr.self(), right_expr.self());
+}
+
+template<VectorExpression Expr, LinearAlgebraScalar Scalar>
+auto operator*(const VecExpr<Expr>& expr, const Scalar& scalar)
+{
+    return ScalarMulExpr<Expr, Scalar>(expr.self(), scalar);
+}
+
+template<VectorExpression Expr, LinearAlgebraScalar Scalar>
+auto operator*(const Scalar& scalar, const VecExpr<Expr>& expr)
+{
+    return ScalarMulExpr<Expr, Scalar>(expr.self(), scalar);
+}
+
+template<VectorExpression LeftExpr, VectorExpression RightExpr>
+auto hadamard(const VecExpr<LeftExpr>& left_expr, const VecExpr<RightExpr>& right_expr)
+{
+    return HadamardExpr<LeftExpr, RightExpr>(left_expr.self(), right_expr.self());
+}
+
 // Left-shift operator for printing a vector
 template<LinearAlgebraScalar Scalar>
 std::ostream& operator<<(std::ostream& os, const Vec<Scalar>& vec)

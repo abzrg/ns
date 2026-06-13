@@ -222,9 +222,10 @@ struct VecExpr
 };
 
 
-// Lazy vector-addition expression.
+// TODO: update comments
+// Lazy vector-operation expression.
 //
-// This class represents:
+// For example addition represents:
 //
 //     left_expr + right_expr
 //
@@ -252,11 +253,17 @@ struct VecExpr
 //
 // Evaluation occurs only when a concrete Vec is constructed or assigned
 // from the expression.
-template<VectorExpression LeftExpr, VectorExpression RightExpr>
-class AddExpr : public VecExpr<AddExpr<LeftExpr, RightExpr>>
+template
+<
+    VectorExpression LeftExpr,
+    VectorExpression RightExpr,
+    typename Operation
+>
+class BinaryVecExpr : public VecExpr<BinaryVecExpr<LeftExpr, RightExpr, Operation>>
 {
     expr_storage_t<LeftExpr> left_expr_;
     expr_storage_t<RightExpr> right_expr_;
+
 public:
 
     // Scalar type produced by this expression.
@@ -277,7 +284,7 @@ public:
              typename RightExpr::value_type
         >;
 
-    AddExpr(const LeftExpr& left_expr, const RightExpr& right_expr)
+    BinaryVecExpr(const LeftExpr& left_expr, const RightExpr& right_expr)
     :
         left_expr_(left_expr),
         right_expr_(right_expr)
@@ -290,12 +297,112 @@ public:
         return left_expr_.size();
     }
 
-    auto operator[](size_t i) const
+    auto operator[](size_t index) const
     {
-        return left_expr_[i] + right_expr_[i];
+        return Operation::apply(left_expr_[index], right_expr_[index]);
+    }
+};
+
+
+struct AddOp
+{
+    template<LinearAlgebraScalar LeftScalar, LinearAlgebraScalar RightScalar>
+    static auto apply(const LeftScalar& left_scalar, const RightScalar& right_scalar)
+    {
+        return left_scalar + right_scalar;
+    }
+};
+
+struct SubOp
+{
+    template<LinearAlgebraScalar LeftScalar, LinearAlgebraScalar RightScalar>
+    static auto apply(const LeftScalar& left_scalar, const RightScalar& right_scalar)
+    {
+        return left_scalar - right_scalar;
+    }
+};
+
+struct HadamardOp
+{
+    template<LinearAlgebraScalar LeftScalar, LinearAlgebraScalar RightScalar>
+    static auto apply(const LeftScalar& left_scalar, const RightScalar& right_scalar)
+    {
+        return left_scalar * right_scalar;
+    }
+};
+
+
+template<VectorExpression L, VectorExpression R>
+using AddExpr = BinaryVecExpr<L, R, AddOp>;
+
+template<VectorExpression L, VectorExpression R>
+using SubExpr = BinaryVecExpr<L, R, SubOp>;
+
+template<VectorExpression L, VectorExpression R>
+using HadamardExpr = BinaryVecExpr<L, R, HadamardOp>;
+
+
+
+// Lazy scalar-vector multiplication expression.
+//
+// Represents:
+//
+//     expr * scalar
+//
+// without immediately computing any values.
+//
+// Example:
+//
+//     auto expr = a * 2.0;
+//
+// stores a reference to the vector expression and a copy of the scalar:
+//
+//     ScalarMulExpr
+//        ├─ expr
+//        └─ 2.0
+//
+// Elements are computed on demand:
+//
+//     expr[i] == a[i] * 2.0
+//
+// Evaluation occurs only when a concrete Vec is constructed or assigned
+// from the expression.
+template
+<
+    VectorExpression Expr,
+    LinearAlgebraScalar Scalar
+>
+class ScalarMulExpr : public VecExpr<ScalarMulExpr<Expr, Scalar>>
+{
+    expr_storage_t<Expr> expr_;
+    Scalar scalar_;
+
+public:
+
+    using value_type =
+        std::common_type_t
+        <
+            typename Expr::value_type,
+            Scalar
+        >;
+
+    ScalarMulExpr(const Expr& expr, Scalar scalar)
+    :
+        expr_(expr),
+        scalar_(scalar)
+    {}
+
+    auto size() const
+    {
+        return expr_.size();
     }
 
+    auto operator[](size_t index) const
+    {
+        return expr_[index] * scalar_;
+    }
 };
+
 
 
 }  // namespace ns
